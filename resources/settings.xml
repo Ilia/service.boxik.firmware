@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<settings>
+	<category label="General">
+		<setting label="Current Version" id="current_version" type="text" default="1.0.0" visible="false" />
+		<setting label="Auto Update" id="auto_update" type="bool" default="false"/>
+       	<setting label="Nigthly Releases (unstable)" id="nightly_update" type="bool" default="false"/>
+       	<setting label="Update Now" type="action" option="close" action="RunScript(service.boxik.firmware, manual)" />
+	</category>
+</settings>
