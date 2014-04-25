@@ -38,7 +38,8 @@ __icon__         = __addon__.getAddonInfo('icon')
 # TODO3: userdata gets wiped on update when user update and poweroff from remote on M3 - wierd
 # what to do? backup and restore? 
 
-__SERVERPATH__ = "https://dl.dropboxusercontent.com/u/2180474/boxik/stable/update.ini"
+#__SERVERPATH__ = "https://dl.dropboxusercontent.com/u/2180474/boxik/stable/update.ini"
+__SERVERPATH__ = "https://dl.dropboxusercontent.com/s/lodscmiqt0mvpnb/update.ini"
 __SERVERPATHNIGHTLY__ = "https://dl.dropboxusercontent.com/u/2180474/boxik/unstable/nightly.ini"
 
 def OPEN_URL(url):
