@@ -89,7 +89,7 @@ def get_local_version():
     xbmc.log('BOXiK Update Service: Local version = %s' % version)
 
     xbmcgui.Window(10000).setProperty("firmware.version", version)
-    return version
+    return str(version).strip(' \t\n\r')
 
 def remote_path():
     if (getSetting('nightly_update') == 'true'):
@@ -113,7 +113,7 @@ def new_update(silent=False):
             dp.close()
 
         xbmc.log('BOXiK Update Service: Remote versions = %s' % remote_version)
-        if remote_version != get_local_version():
+        if str(remote_version) != get_local_version():
             return remote_version, update_url, update_md5
     
     return False, False, False
