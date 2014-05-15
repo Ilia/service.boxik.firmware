@@ -38,7 +38,8 @@ __icon__         = __addon__.getAddonInfo('icon')
 # TODO3: userdata gets wiped on update when user update and poweroff from remote on M3 - wierd
 # what to do? backup and restore? 
 
-__SERVERPATH__ = "https://dl.dropboxusercontent.com/u/2180474/boxik/stable/update.ini"
+#__SERVERPATH__ = "https://dl.dropboxusercontent.com/u/2180474/boxik/stable/update.ini"
+__SERVERPATH__ = "https://dl.dropboxusercontent.com/s/lodscmiqt0mvpnb/update.ini"
 __SERVERPATHNIGHTLY__ = "https://dl.dropboxusercontent.com/u/2180474/boxik/unstable/nightly.ini"
 
 def OPEN_URL(url):
@@ -85,10 +86,10 @@ def get_local_version():
     except IOError:
         version = getSetting('current_version')
     
-    xbmc.log('BOXiK Manual Service: Local version = %s' % version)
+    xbmc.log('BOXiK Update Service: Local version = %s' % version)
 
     xbmcgui.Window(10000).setProperty("firmware.version", version)
-    return version
+    return str(version).strip(' \t\n\r')
 
 def remote_path():
     if (getSetting('nightly_update') == 'true'):
@@ -110,7 +111,9 @@ def new_update(silent=False):
         if not silent:
             dp.update(100)
             dp.close()
-        if remote_version != get_local_version():
+
+        xbmc.log('BOXiK Update Service: Remote versions = %s' % remote_version)
+        if str(remote_version) != get_local_version():
             return remote_version, update_url, update_md5
     
     return False, False, False
