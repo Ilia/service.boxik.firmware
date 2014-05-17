@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-#     Copyright (C) 2013 Team-XBMC
+#     Copyright (C) 2013 BOXiK
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -34,15 +34,11 @@ __addonname__    = __addon__.getAddonInfo('name')
 __addonpath__    = __addon__.getAddonInfo('path').decode('utf-8')
 __localize__     = __addon__.getLocalizedString
 __icon__         = __addon__.getAddonInfo('icon')
+__UPDATEHOST__   = "https://dl.dropboxusercontent.com/u/2180474/boxik"
 
-# TODO3: userdata gets wiped on update when user update and poweroff from remote on M3 - wierd
-# what to do? backup and restore? 
+def fetch_url(url):
+    ''' Fetch url '''
 
-#__SERVERPATH__ = "https://dl.dropboxusercontent.com/u/2180474/boxik/stable/update.ini"
-__SERVERPATH__ = "https://dl.dropboxusercontent.com/s/lodscmiqt0mvpnb/update.ini"
-__SERVERPATHNIGHTLY__ = "https://dl.dropboxusercontent.com/u/2180474/boxik/unstable/nightly.ini"
-
-def OPEN_URL(url):
     try:
         req = urllib2.Request(url)
         req.add_header('User-Agent', 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3')
@@ -51,40 +47,52 @@ def OPEN_URL(url):
         response.close()
         return link
     except urllib2.HTTPError, e:
-        message('No internect connection')
         xbmc.log("BOXiK Auto Service: HTTPError %s" % str(e))
-        return False
     except urllib2.URLError, e:
-        message('No internect connection')
         xbmc.log("BOXiK Auto Service: URLError %s" % str(e))
-        return False
+    
+    return False
 
 def message(txt):
+    ''' Send message to GUI '''
+
     xbmc.executebuiltin("XBMC.Notification(%s, %s, %d, %s)" % (__addonname__, txt, 5000, __icon__))
 
-def setSetting(setting, value):
+def set_setting(setting, value):
+    ''' Generic way of setting settings '''
+
     return xbmcaddon.Addon(id = __addon_id__).setSetting(setting, value)
 
-def getSetting(setting):
+def get_setting(setting):
+    ''' Generic way of getting settings '''
+
     return xbmcaddon.Addon(id = __addon_id__).getSetting(setting)
 
 def set_lock():
+    ''' Set lock - used to stop script running again '''
+
     xbmcgui.Window(10000).setProperty('update.lock', 'true')
      
 def remove_lock():
+    ''' Remove running lock '''
+
     xbmcgui.Window(10000).clearProperty('update.lock')
 
 def is_running():
+    ''' Check if script is already running '''
+
     if xbmcgui.Window(10000).getProperty('update.lock') == 'true':
         return True
     return False
 
 def get_local_version():
+    ''' Get the local version of the device '''
+
     try:
         f = open('/usr/share/xbmc/system/version', 'r')
         version = f.readline()
     except IOError:
-        version = getSetting('current_version')
+        version = get_setting('current_version')
     
     xbmc.log('BOXiK Update Service: Local version = %s' % version)
 
@@ -92,17 +100,29 @@ def get_local_version():
     return str(version).strip(' \t\n\r')
 
 def remote_path():
-    if (getSetting('nightly_update') == 'true'):
-        return __SERVERPATHNIGHTLY__
+    ''' Get model, state and create url '''
 
-    return __SERVERPATH__ 
+    try:
+        f = open('/usr/share/xbmc/system/model', 'r')
+        model = f.readline()
+        model = str(model).strip(' \t\n\r')
+    except IOError:
+        xbmc.log('BOXiK Update Service: can\'t read model, exiting.')
+        return False
+    
+    state = 'unstable' if get_setting('nightly_update') == 'true' else 'stable'
+
+    return "%s/%s/%s/update.ini" % (__UPDATEHOST__, model, state)
+    
 
 def new_update(silent=False):
+    ''' Check if there is new updare '''
+
     if not silent:
         dp = xbmcgui.DialogProgress()
         dp.create("BOXiK Updater", "Checking for new updates",' ', 'Please Wait...')
     
-    link = OPEN_URL(remote_path())
+    link = fetch_url(remote_path())
     if link:
         link = link.replace('\n','').replace('\r','')
         if not silent:
@@ -120,7 +140,7 @@ def new_update(silent=False):
    
 
 def manual():
-    
+    ''' Run a manual update '''
     # backup = Backup('/tmp/')
     # backup.run()
     
@@ -137,56 +157,69 @@ def manual():
         else:
             start(new_version, update_url, update_md5)
     else:
-        if xbmcgui.Dialog().yesno(__addonname__, "Do you have the update.zip on USB thumb?", "Selecting 'Yes' will reboot your device to start the update."):
+        if xbmcgui.Dialog().yesno(__addonname__, \
+                        "Do you have the update.zip on USB thumb?", \
+                        "Selecting 'Yes' will reboot your device to start the update."):
             reboot()
 
 def auto():
+    ''' Run an auto update '''
     if is_running():
         message('Updater is running, please wait.')
         return
 
-    if getSetting('auto_update') == 'true':
+    if get_setting('auto_update') == 'true':
         new_version, update_url, update_md5 = new_update(True)
         xbmc.log('BOXiK Auto Service: New update check - %s' % new_version)
         start(new_version, update_url, update_md5)
 
 def reboot():
+    ''' Remove once of lock and reboot to update '''
     remove_lock()
     os.system('reboot recovery')
-   
-def which_usb():
-       # TODO: check USB size?
-    '''
+
+
+def usb_ok():
+    ''' check if USB is ok - ie enough space WIP '''
+
     import subprocess
     df = subprocess.Popen(["df"], stdout=subprocess.PIPE)
     output = df.communicate()[0]
     device, size, used, available, percent, mountpoint = output.split("\n")[1].split()
-    '''
+
+
+def which_usb():
+    ''' Find suitable USB device to store update '''
+
     try:
         root = "/media"
-        mount = [name for name in os.listdir(root) if os.path.isdir(os.path.join(root, name)) and \
-            os.access(os.path.join(root, name), os.W_OK and \
+        mount = [name for name in os.listdir(root) if \
+            os.path.isdir(os.path.join(root, name)) and \
+            os.access(os.path.join(root, name), os.W_OK | os.X_OK) and \
             name != "EFI" and \
-            not os.path.exists( os.path.join(root, name) + "/.empty" ))][0]
+            not os.path.exists( os.path.join(root, name) + "/.empty" )][0]
         path = "%s/%s/" % (root, mount)
         xbmc.log("BOXiK Auto Service: setting path %s" % path)
         return path
     except IndexError:
         xbmc.log("BOXiK Auto Service: no path")
-        return False
     except:
         xbmc.log("BOXiK Auto Service: bad path")
-        return False
 
     return False
-    
 
 def start(version, update_url, update_md5):
+    ''' init update process '''
+
     set_lock()
-    if version and xbmcgui.Dialog().yesno(__addonname__, "New update ("+ version +") is available, would you like to update?", "Selecting 'Yes' will download the update, reboot your", "device and start the update process."):
+    if version and xbmcgui.Dialog().yesno(__addonname__, \
+                        "New update ("+ version +") is available, would you like to update?", \
+                        "Selecting 'Yes' will download the update, reboot your", \
+                        "device and start the update process."):
         download_location = which_usb()
         if download_location:
-            xbmc.log("BOXiK Auto Service: %s %s %s %s " % (remote_path(), download_location, update_url, update_md5))
+            xbmc.log("BOXiK Auto Service: %s %s %s %s " % \
+                     (remote_path(), download_location, update_url, update_md5))
             if download.firmware(download_location, update_url, update_md5):
                 reboot()
             else: 
@@ -194,5 +227,8 @@ def start(version, update_url, update_md5):
                 dp.ok(__addonname__, "Download failed", "", "Try again later.")
         else:
             dp = xbmcgui.Dialog()
-            dp.ok(__addonname__, "Please insert a compatible USB into the BOXiK", " ", "Update manually from Settings menu > Update")
+            dp.ok(__addonname__, \
+                  "Please insert a compatible USB into the BOXiK", 
+                  " ", \
+                  "Update manually from Settings > Update")
     remove_lock()
