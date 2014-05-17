@@ -102,15 +102,15 @@ def get_local_version():
 def remote_path():
     ''' Get model, state and create url '''
 
+    state = 'unstable' if get_setting('nightly_update') == 'true' else 'stable'
+
     try:
         f = open('/usr/share/xbmc/system/model', 'r')
         model = f.readline()
         model = str(model).strip(' \t\n\r')
     except IOError:
-        xbmc.log('BOXiK Update Service: can\'t read model, exiting.')
-        return False
-    
-    state = 'unstable' if get_setting('nightly_update') == 'true' else 'stable'
+        xbmc.log('BOXiK Update Service: can\'t read model, setting old url')
+        return "%s/%s/update.ini" % (__UPDATEHOST__, state)
 
     return "%s/%s/%s/update.ini" % (__UPDATEHOST__, model, state)
     
