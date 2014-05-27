@@ -9,6 +9,9 @@ def firmware(localpath, remote_url, remote_md5):
 	localfile = localpath + 'update.zip'
 	if get_file(remote_url, localfile) and check_md5(localfile, remote_md5):
 		os.system('echo "--update_package=/udisk/update.zip" > %s/factory_update_param.aml' % localpath)
+		os.system('echo "--wipe_data" >> %s/factory_update_param.aml' % localpath)
+		os.system('echo "--wipe_cache" >> %s/factory_update_param.aml' % localpath)
+		os.system('echo "--wipe_media" >> %s/factory_update_param.aml' % localpath)
 		return True
 	else:
 		return False
