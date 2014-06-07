@@ -141,8 +141,6 @@ def new_update(silent=False):
 
 def manual():
     ''' Run a manual update '''
-    # backup = Backup('/tmp/')
-    # backup.run()
     
     if is_running():
         message('Updater is running, please wait.')
@@ -214,9 +212,20 @@ def start(version, update_url, update_md5):
     set_lock()
     if version and xbmcgui.Dialog().yesno(__addonname__, \
                         "New update ("+ version +") is available, would you like to update?", \
-                        "Selecting 'Yes' will download the update, reboot your", \
+                        "Selecting 'Yes' will backup your data, download the update, reboot your", \
                         "device and start the update process."):
         download_location = which_usb()
+
+        if download_location:
+            backup = Backup(download_location)
+            if !backup.run():
+                dp.ok(__addonname__, \
+                    "Backup could not be completed. Please use a 16GB USB or larger.", 
+                    " ", \
+                    "Update manually from Settings > Update")
+                remove_lock()
+                return
+
         if download_location:
             xbmc.log("BOXiK Auto Service: %s %s %s %s " % \
                      (remote_path(), download_location, update_url, update_md5))

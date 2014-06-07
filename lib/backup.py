@@ -11,8 +11,9 @@ import subprocess
 
 from xml.dom import minidom
 
-XBMC_USER_HOME = os.environ.get("XBMC_USER_HOME", "/Users/ilia/Library/Application Support/XBMC/")
-# XBMC_USER_HOME = os.environ.get("XBMC_USER_HOME", "/root/.xbmc")
+#XBMC_USER_HOME = os.environ.get("XBMC_USER_HOME", "/Users/ilia/Library/Application Support/XBMC/")
+
+XBMC_USER_HOME = os.environ.get("XBMC_USER_HOME", "/root/.xbmc")
 SSH_KEYS = "/etc/ssh"
 
 BACKUP_DIRS = [XBMC_USER_HOME]
@@ -52,9 +53,9 @@ class Backup:
             if not os.path.exists(self.backup_dir):
                 os.makedirs(self.backup_dir)
             
-            # f = open('/usr/share/xbmc/system/version', 'r')
-            # self.version = f.readline()
-            self.version = "Build_X"
+            f = open('/usr/share/xbmc/system/version', 'r')
+            self.version = f.readline()
+            #self.version = "Build_X"
 
             self.backup_file = "backup." + self.version + '.tar'
 
@@ -67,11 +68,12 @@ class Backup:
             tar.close()
             self.backup_dlg.close()
             del self.backup_dlg
-
+            return True
             # self.oe.dbg_log('system::do_backup', 'exit_function', 0)
         except Exception, e:
-
+            xbmc.log("BOXiK Auto Service: backup error: " + repr(e))
             self.backup_dlg.close()
+            return False
             # self.oe.dbg_log('system::do_backup', 'ERROR: (' + repr(e) + ')')
 
     def tar_add_folder(self, tar, folder):
