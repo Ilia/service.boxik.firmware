@@ -64,6 +64,7 @@ class Backup:
                 self.tar_add_folder(tar, directory)
 
             tar.close()
+            xbmc.sleep(2000)
             self.backup_dlg.close()
             del self.backup_dlg
             
