@@ -2,7 +2,6 @@ import os
 import re
 import glob
 import time
-import json
 import xbmc
 import xbmcgui
 import tarfile
@@ -23,7 +22,8 @@ class Backup:
     backup_dir = False
     files_location = False
 
-    def __init__(self, backup_dir):
+    def __init__(self, backup_dir, version):
+        self.version = version
         self.backup_dir = backup_dir
         xbmc.log("BOXiK Auto Service: backing up to %s" % (self.backup_dir))
 
@@ -41,7 +41,7 @@ class Backup:
 
             except Exception, e:
                 xbmc.log("BOXiK Auto Service: error" + repr(e))
-                return False
+                
               
             xbmc.log("BOXiK Auto Service: backing up size %s" % (self.total_backup_size))
 
@@ -53,8 +53,6 @@ class Backup:
             if not os.path.exists(self.backup_dir):
                 os.makedirs(self.backup_dir)
             
-            f = open('/usr/share/xbmc/system/version', 'r')
-            self.version = f.readline()
             #self.version = "Build_X"
 
             self.backup_file = "backup." + self.version + '.tar'
@@ -68,12 +66,12 @@ class Backup:
             tar.close()
             self.backup_dlg.close()
             del self.backup_dlg
-            return True
+            
             # self.oe.dbg_log('system::do_backup', 'exit_function', 0)
         except Exception, e:
             xbmc.log("BOXiK Auto Service: backup error: " + repr(e))
             self.backup_dlg.close()
-            return False
+            
             # self.oe.dbg_log('system::do_backup', 'ERROR: (' + repr(e) + ')')
 
     def tar_add_folder(self, tar, folder):

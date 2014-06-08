@@ -157,8 +157,16 @@ def manual():
     else:
         if xbmcgui.Dialog().yesno(__addonname__, \
                         "Do you have the update.zip on USB thumb?", \
-                        "Selecting 'Yes' will reboot your device to start the update."):
-            reboot()
+                        "Selecting 'Yes' will backup, reboot and start the update."):
+            try:
+                backup = Backup( which_usb() , get_local_version() )
+                backup.run()
+                reboot()
+            except:    
+                dp.ok(__addonname__, \
+                    "Backup could not be completed. Please use a 16GB USB or larger.", 
+                    " ", \
+                    "Update manually from Settings > Update")
 
 def auto():
     ''' Run an auto update '''
@@ -216,15 +224,17 @@ def start(version, update_url, update_md5):
                         "device and start the update process."):
         download_location = which_usb()
 
-        if download_location:
+        try:
             backup = Backup(download_location)
-            if !backup.run():
-                dp.ok(__addonname__, \
+            backup.run()
+        except:    
+            dp.ok(__addonname__, \
                     "Backup could not be completed. Please use a 16GB USB or larger.", 
                     " ", \
                     "Update manually from Settings > Update")
-                remove_lock()
-                return
+                
+            remove_lock()
+            return
 
         if download_location:
             xbmc.log("BOXiK Auto Service: %s %s %s %s " % \
