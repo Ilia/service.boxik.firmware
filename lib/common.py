@@ -219,18 +219,19 @@ def start(version, update_url, update_md5):
 
     set_lock()
     if version and xbmcgui.Dialog().yesno(__addonname__, \
-                        "New update ("+ version +") is available, would you like to update?", \
-                        "Selecting 'Yes' will backup your data, download the update, reboot your", \
-                        "device and start the update process."):
+                        "New update ("+ version +") is available.", \
+                        "Selecting 'Yes' will backup your data, download the update,", \
+                        "reboot your device and start the update process."):
         download_location = which_usb()
 
         try:
-            backup = Backup(download_location)
+            backup = Backup(download_location, get_local_version())
             backup.run()
-        except:    
+        except:  
+            dp = xbmcgui.Dialog()  
             dp.ok(__addonname__, \
-                    "Backup could not be completed. Please use a 16GB USB or larger.", 
-                    " ", \
+                    "Backup could not be completed.", 
+                    "Please use a 16GB USB or larger.", \
                     "Update manually from Settings > Update")
                 
             remove_lock()
