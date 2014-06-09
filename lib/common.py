@@ -141,8 +141,6 @@ def new_update(silent=False):
 
 def manual():
     ''' Run a manual update '''
-    # backup = Backup('/tmp/')
-    # backup.run()
     
     if is_running():
         message('Updater is running, please wait.')
@@ -159,8 +157,16 @@ def manual():
     else:
         if xbmcgui.Dialog().yesno(__addonname__, \
                         "Do you have the update.zip on USB thumb?", \
-                        "Selecting 'Yes' will reboot your device to start the update."):
-            reboot()
+                        "Selecting 'Yes' will backup, reboot and start the update."):
+            try:
+                backup = Backup( which_usb() , get_local_version() )
+                backup.run()
+                reboot()
+            except:    
+                dp.ok(__addonname__, \
+                    "Backup could not be completed. Please use a 16GB USB or larger.", 
+                    " ", \
+                    "Update manually from Settings > Update")
 
 def auto():
     ''' Run an auto update '''
@@ -213,10 +219,24 @@ def start(version, update_url, update_md5):
 
     set_lock()
     if version and xbmcgui.Dialog().yesno(__addonname__, \
-                        "New update ("+ version +") is available, would you like to update?", \
-                        "Selecting 'Yes' will download the update, reboot your", \
-                        "device and start the update process."):
+                        "New update ("+ version +") is available.", \
+                        "Selecting 'Yes' will backup your data, download the update,", \
+                        "reboot your device and start the update process."):
         download_location = which_usb()
+
+        try:
+            backup = Backup(download_location, get_local_version())
+            backup.run()
+        except:  
+            dp = xbmcgui.Dialog()  
+            dp.ok(__addonname__, \
+                    "Backup could not be completed.", 
+                    "Please use a 16GB USB or larger.", \
+                    "Update manually from Settings > Update")
+                
+            remove_lock()
+            return
+
         if download_location:
             xbmc.log("BOXiK Auto Service: %s %s %s %s " % \
                      (remote_path(), download_location, update_url, update_md5))
