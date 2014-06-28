@@ -55,7 +55,7 @@ class Backup:
             
             #self.version = "Build_X"
 
-            self.backup_file = "backup." + self.version + '.tar'
+            self.backup_file = "_boxik_backup." + self.version + '.tar'
 
             xbmc.log("BOXiK Auto Service: backing up file %s" % (self.backup_file))
 
